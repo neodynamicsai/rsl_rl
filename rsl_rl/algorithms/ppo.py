@@ -12,7 +12,7 @@ from itertools import chain
 
 from rsl_rl.modules import ActorCritic
 from rsl_rl.modules.rnd import RandomNetworkDistillation
-from rsl_rl.storage import RolloutStorage
+from rsl_rl.storage import RolloutStorage, RolloutStorageCat
 from rsl_rl.utils import string_to_callable
 
 
@@ -97,8 +97,8 @@ class PPO:
         # Create optimizer
         self.optimizer = optim.Adam(self.policy.parameters(), lr=learning_rate)
         # Create rollout storage
-        self.storage: RolloutStorage = None  # type: ignore
-        self.transition = RolloutStorage.Transition()
+        self.storage: RolloutStorageCat = None  # type: ignore
+        self.transition = RolloutStorageCat.Transition()
 
         # PPO parameters
         self.clip_param = clip_param
@@ -115,15 +115,17 @@ class PPO:
         self.learning_rate = learning_rate
         self.normalize_advantage_per_mini_batch = normalize_advantage_per_mini_batch
 
-    def init_storage(self, training_type, num_envs, num_transitions_per_env, obs, actions_shape):
+    def init_storage(self, training_type, num_envs, num_transitions_per_env, obs, actions_shape, logits_shape):
         # create rollout storage
-        self.storage = RolloutStorage(
+        self.storage = RolloutStorageCat(
             training_type,
             num_envs,
             num_transitions_per_env,
             obs,
             actions_shape,
             self.device,
+            action_type="multi_discrete",
+            logits_shape=logits_shape,
         )
 
     def act(self, obs):
